@@ -132,6 +132,7 @@ jobs:
         run: |
           tag="${GITHUB_REF#refs/tags/}"
           gh release create "$tag" \
+            --repo "$GITHUB_REPOSITORY" \
             --title="$tag" \
             --notes-file release-assets/release-notes.md \
             release-assets/main.js release-assets/manifest.json release-assets/styles.css release-assets/SHA256SUMS
