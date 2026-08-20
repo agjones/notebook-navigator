@@ -1014,185 +1014,23 @@ describe('FeatureImageContentProvider scanning', () => {
         expect(result?.featureImage?.size).toBe(0);
     });
 
-    it('downloads extensionless external SVG responses after successful HEAD preflight', async () => {
+    it('does not download external images even when stale settings request them', async () => {
         const context = createApp();
         const { app } = context;
         const provider = new TestFeatureImageContentProvider(app);
         const settings = createSettings({ downloadExternalFeatureImages: true });
         const noteFile = createFile('notes/note.md');
-
-        requestUrlMock.mockImplementation(async (request: { method?: string }) => {
-            if (request.method === 'HEAD') {
-                return {
-                    status: 200,
-                    headers: { 'content-type': 'image/svg+xml', 'content-length': '1024' }
-                };
-            }
-
-            return {
-                status: 200,
-                headers: { 'content-type': 'image/svg+xml' },
-                arrayBuffer: new ArrayBuffer(0)
-            };
-        });
 
         setMarkdownContent(context, noteFile, '![](https://example.com/render?id=cover)');
 
         const result = await provider.runProcessFile(noteFile, settings);
 
-        // Rasterization requires DOM APIs unavailable in the node test environment,
-        // so the result is the empty processed marker with the external key.
+        // The URL remains the durable source key, but the hardened policy stores only an
+        // empty processed marker and never reaches Obsidian's privileged request API.
         expect(result?.featureImageKey).toBe('e:https://example.com/render?id=cover');
         expect(result?.featureImage).toBeInstanceOf(Blob);
         expect(result?.featureImage?.size).toBe(0);
-        expect(requestUrlMock).toHaveBeenCalledTimes(2);
-        expect(requestUrlMock).toHaveBeenNthCalledWith(
-            1,
-            expect.objectContaining({
-                url: 'https://example.com/render?id=cover',
-                method: 'HEAD'
-            })
-        );
-        expect(requestUrlMock).toHaveBeenNthCalledWith(
-            2,
-            expect.objectContaining({
-                url: 'https://example.com/render?id=cover',
-                method: 'GET'
-            })
-        );
-    });
-
-    it('skips oversized external SVG responses before downloading the body', async () => {
-        const context = createApp();
-        const { app } = context;
-        const provider = new TestFeatureImageContentProvider(app);
-        const settings = createSettings({ downloadExternalFeatureImages: true });
-        const noteFile = createFile('notes/note.md');
-
-        requestUrlMock.mockImplementation(async () => {
-            return {
-                status: 200,
-                headers: { 'content-type': 'image/svg+xml', 'content-length': '3000000' }
-            };
-        });
-
-        setMarkdownContent(context, noteFile, '![](https://example.com/render?id=cover)');
-
-        const result = await provider.runProcessFile(noteFile, settings);
-
-        // The reported length exceeds the SVG source cap, so only the HEAD request runs.
-        expect(result?.featureImageKey).toBe('e:https://example.com/render?id=cover');
-        expect(result?.featureImage).toBeInstanceOf(Blob);
-        expect(result?.featureImage?.size).toBe(0);
-        expect(requestUrlMock).toHaveBeenCalledTimes(1);
-        expect(requestUrlMock).toHaveBeenCalledWith(
-            expect.objectContaining({
-                url: 'https://example.com/render?id=cover',
-                method: 'HEAD'
-            })
-        );
-    });
-
-    it('downloads raster URLs after successful HEAD preflight', async () => {
-        const context = createApp();
-        const { app } = context;
-        const provider = new TestFeatureImageContentProvider(app);
-        const settings = createSettings({ downloadExternalFeatureImages: true });
-        const noteFile = createFile('notes/note.md');
-
-        requestUrlMock.mockImplementation(async (request: { method?: string }) => {
-            if (request.method === 'HEAD') {
-                return {
-                    status: 200,
-                    headers: { 'content-type': 'image/png', 'content-length': '0' }
-                };
-            }
-
-            return {
-                status: 200,
-                headers: { 'content-type': 'image/png' },
-                arrayBuffer: new ArrayBuffer(0)
-            };
-        });
-
-        setMarkdownContent(context, noteFile, '![](https://example.com/cover.png)');
-
-        const result = await provider.runProcessFile(noteFile, settings);
-
-        expect(result?.featureImageKey).toBe('e:https://example.com/cover.png');
-        expect(result?.featureImage).toBeInstanceOf(Blob);
-        expect(result?.featureImage?.size).toBe(0);
-        expect(requestUrlMock).toHaveBeenCalledTimes(2);
-        expect(requestUrlMock).toHaveBeenNthCalledWith(
-            1,
-            expect.objectContaining({
-                url: 'https://example.com/cover.png',
-                method: 'HEAD'
-            })
-        );
-        expect(requestUrlMock).toHaveBeenNthCalledWith(
-            2,
-            expect.objectContaining({
-                url: 'https://example.com/cover.png',
-                method: 'GET'
-            })
-        );
-    });
-
-    it('skips raster URLs when HEAD is unavailable', async () => {
-        const context = createApp();
-        const { app } = context;
-        const provider = new TestFeatureImageContentProvider(app);
-        const settings = createSettings({ downloadExternalFeatureImages: true });
-        const noteFile = createFile('notes/note.md');
-
-        requestUrlMock.mockResolvedValue({
-            status: 405,
-            headers: {}
-        });
-
-        setMarkdownContent(context, noteFile, '![](https://example.com/cover.png)');
-
-        const result = await provider.runProcessFile(noteFile, settings);
-
-        expect(result?.featureImageKey).toBe('e:https://example.com/cover.png');
-        expect(result?.featureImage).toBeInstanceOf(Blob);
-        expect(result?.featureImage?.size).toBe(0);
-        expect(requestUrlMock).toHaveBeenCalledTimes(1);
-        expect(requestUrlMock).toHaveBeenCalledWith(
-            expect.objectContaining({
-                url: 'https://example.com/cover.png',
-                method: 'HEAD'
-            })
-        );
-    });
-
-    it('skips raster URLs when HEAD omits Content-Length', async () => {
-        const context = createApp();
-        const { app } = context;
-        const provider = new TestFeatureImageContentProvider(app);
-        const settings = createSettings({ downloadExternalFeatureImages: true });
-        const noteFile = createFile('notes/note.md');
-
-        requestUrlMock.mockResolvedValue({
-            status: 200,
-            headers: { 'content-type': 'image/png' }
-        });
-
-        setMarkdownContent(context, noteFile, '![](https://example.com/cover.png)');
-
-        const result = await provider.runProcessFile(noteFile, settings);
-
-        expect(result?.featureImageKey).toBe('e:https://example.com/cover.png');
-        expect(result?.featureImage).toBeInstanceOf(Blob);
-        expect(result?.featureImage?.size).toBe(0);
-        expect(requestUrlMock).toHaveBeenCalledTimes(1);
-        expect(requestUrlMock).toHaveBeenCalledWith(
-            expect.objectContaining({
-                url: 'https://example.com/cover.png',
-                method: 'HEAD'
-            })
-        );
+        expect(requestUrlMock).not.toHaveBeenCalled();
     });
 
     it('marks Excalidraw feature images as direct companion-image rows', async () => {

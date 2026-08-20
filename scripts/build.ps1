@@ -107,8 +107,9 @@ function Invoke-BuildCommand {
 $NodeDir = Join-Path $env:ProgramFiles 'nodejs'
 $Node = Resolve-BuildTool 'node.exe' @((Join-Path $NodeDir 'node.exe'))
 $Npm = Resolve-BuildTool 'npm.cmd' @((Join-Path $NodeDir 'npm.cmd'))
-$Npx = Resolve-BuildTool 'npx.cmd' @((Join-Path $NodeDir 'npx.cmd'))
-$PowerShell = Resolve-BuildTool 'powershell.exe' @((Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'))
+$LocalBin = Join-Path $ProjectRoot 'node_modules\.bin'
+$Tsc = Resolve-BuildTool (Join-Path $LocalBin 'tsc.cmd')
+$Knip = Resolve-BuildTool (Join-Path $LocalBin 'knip.cmd')
 
 $ResolvedNodeDir = Split-Path -Parent $Node
 if (($env:Path -split ';') -notcontains $ResolvedNodeDir) {
@@ -166,7 +167,7 @@ if ($stylelint.Status -ne 0) {
 }
 
 Write-Host "`nChecking TypeScript types..."
-$tsc = Invoke-BuildCommand -FilePath $Npx -ArgumentList @('tsc', '--noEmit', '--skipLibCheck')
+$tsc = Invoke-BuildCommand -FilePath $Tsc -ArgumentList @('--noEmit', '--skipLibCheck')
 
 if ($tsc.Status -ne 0) {
     Write-Host "$ErrorMark TypeScript type checking failed"
@@ -175,12 +176,12 @@ if ($tsc.Status -ne 0) {
     Write-Host "$SuccessMark TypeScript types are valid"
 
     Write-Host 'Checking for unused imports...'
-    $unused = Invoke-BuildCommand -FilePath $Npx -ArgumentList @('tsc', '--noEmit', '--noUnusedLocals', '--noUnusedParameters') -NoEcho
+    $unused = Invoke-BuildCommand -FilePath $Tsc -ArgumentList @('--noEmit', '--noUnusedLocals', '--noUnusedParameters') -NoEcho
     $unusedCount = @($unused.Output | Where-Object { $_ -match 'is declared but|is defined but' }).Count
 
     if ($unusedCount -gt 0) {
         Write-Host "$WarningMark Warning: Found $unusedCount unused imports or variables"
-        Write-Host "Run 'npx tsc --noEmit --noUnusedLocals --noUnusedParameters' to see details"
+        Write-Host "Run 'node_modules\.bin\tsc.cmd --noEmit --noUnusedLocals --noUnusedParameters' to see details"
         $BuildWarnings++
     } else {
         Write-Host "$SuccessMark No unused imports found"
@@ -188,13 +189,13 @@ if ($tsc.Status -ne 0) {
 }
 
 Write-Host "`nChecking for dead code..."
-$knip = Invoke-BuildCommand -FilePath $Npx -ArgumentList @('knip', '--no-progress') -NoEcho -SuppressErrorOutput
+$knip = Invoke-BuildCommand -FilePath $Knip -ArgumentList @('--no-progress') -NoEcho -SuppressErrorOutput
 $deadFiles = @($knip.Output | Where-Object { $_ -match '^src/.*\.(ts|tsx)' }).Count
 $deadExports = @($knip.Output | Where-Object { $_ -match 'function|class|interface|type|const' }).Count
 
 if (($deadFiles -gt 0) -or ($deadExports -gt 0)) {
     Write-Host "$WarningMark Warning: Found dead code - $deadFiles unused files, $deadExports unused exports"
-    Write-Host "Run 'npx knip' to see details"
+    Write-Host "Run 'node_modules\.bin\knip.cmd' to see details"
     $BuildWarnings++
 } else {
     Write-Host "$SuccessMark No dead code found"
@@ -246,34 +247,6 @@ if (($BuildErrors -eq 0) -and ($BuildWarnings -eq 0)) {
 
     if ($build.Status -eq 0) {
         Write-Host "$SuccessMark Build completed successfully"
-
-        $localPowerShellScript = Join-Path $ScriptDir 'build-local.ps1'
-        $localBashScript = Join-Path $ScriptDir 'build-local.sh'
-
-        if (Test-Path -LiteralPath $localPowerShellScript) {
-            Write-Host 'Running local PowerShell post-build script...'
-            $localBuild = Invoke-BuildCommand -FilePath $PowerShell -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $localPowerShellScript)
-
-            if ($localBuild.Status -ne 0) {
-                Write-Host "$ErrorMark Local post-build script failed"
-                exit 1
-            }
-        } elseif (Test-Path -LiteralPath $localBashScript) {
-            $bashCommand = Get-Command 'bash' -ErrorAction SilentlyContinue
-
-            if (-not $bashCommand) {
-                Write-Host "$ErrorMark build-local.sh exists, but Bash is not available"
-                exit 1
-            }
-
-            Write-Host 'Running local post-build script...'
-            $localBuild = Invoke-BuildCommand -FilePath $bashCommand.Source -ArgumentList @($localBashScript)
-
-            if ($localBuild.Status -ne 0) {
-                Write-Host "$ErrorMark Local post-build script failed"
-                exit 1
-            }
-        }
 
         Write-Host "`n=== Build Summary ==="
         Write-Host "$SuccessMark Build successful"

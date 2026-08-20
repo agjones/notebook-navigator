@@ -276,7 +276,7 @@ React render paths.
 
 **Purpose**: Stores user configuration and vault-scoped metadata that the plugin needs to restore deterministically.
 
-**Location**: `.obsidian/plugins/notebook-navigator/data.json`
+**Location**: `.obsidian/plugins/notebook-navigator-hardened/data.json`
 
 **Synchronization**: Synchronized by Obsidian Sync (when enabled) and by any other vault/file synchronization method.
 

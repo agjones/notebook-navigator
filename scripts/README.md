@@ -170,7 +170,7 @@ Custom local deployment script (ignored by git and not committed to the reposito
 ```bash
 #!/bin/bash
 # Copy built files to Obsidian vault
-cp main.js manifest.json styles.css ~/Documents/ObsidianVault/.obsidian/plugins/notebook-navigator/
+cp main.js manifest.json styles.css ~/Documents/ObsidianVault/.obsidian/plugins/notebook-navigator-hardened/
 ```
 
 ## check-unused-strings.mjs
@@ -226,6 +226,6 @@ Runs the icon pack updater from `icon-assets/scripts/update-icon-packs.ts`.
 
 **Features:**
 
-- Uses `npx tsx` to run the TypeScript updater
+- Uses the lockfile-installed `node_modules/.bin/tsx`; it never fetches a missing runner on demand
 - Supports updating all packs or selected pack IDs
 - Supports check-only, forced update, and local manifest regeneration modes

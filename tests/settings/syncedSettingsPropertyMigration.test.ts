@@ -116,7 +116,7 @@ describe('migrateLegacySyncedSettings property key migration', () => {
         });
 
         expect(settings.enablePropertyInternalLinks).toBe(true);
-        expect(settings.enablePropertyExternalLinks).toBe(true);
+        expect(settings.enablePropertyExternalLinks).toBe(false);
     });
 
     it('migrates old note property word count setting to the word count title setting', () => {

@@ -974,7 +974,7 @@ describe('useFileItemPills', () => {
         expect(markup).toContain('data-icon-id="external-link"');
     });
 
-    it('renders bare custom URIs as clickable property links', () => {
+    it('renders bare custom URIs as plain property values', () => {
         const markup = renderPillRows({
             file: createTestTFile('Notes/Links.md'),
             isCompactMode: false,
@@ -997,12 +997,12 @@ describe('useFileItemPills', () => {
         });
 
         expect(markup).toContain('zotero://open-pdf/library/items/A65QUPQU');
-        expect(markup).toContain('nn-file-property-link');
-        expect(markup).toContain('nn-clickable-tag');
-        expect(markup).toContain('data-icon-id="external-link"');
+        expect(markup).not.toContain('nn-file-property-link');
+        expect(markup).not.toContain('nn-clickable-tag');
+        expect(markup).not.toContain('data-icon-id="external-link"');
     });
 
-    it('renders markdown custom URIs as clickable property links', () => {
+    it('renders markdown custom URIs as plain property values', () => {
         const markup = renderPillRows({
             file: createTestTFile('Notes/Links.md'),
             isCompactMode: false,
@@ -1026,9 +1026,9 @@ describe('useFileItemPills', () => {
 
         expect(markup).toContain('Open in Zotero');
         expect(markup).not.toContain('zotero://open-pdf/library/items/A65QUPQU');
-        expect(markup).toContain('nn-file-property-link');
-        expect(markup).toContain('nn-clickable-tag');
-        expect(markup).toContain('data-icon-id="external-link"');
+        expect(markup).not.toContain('nn-file-property-link');
+        expect(markup).not.toContain('nn-clickable-tag');
+        expect(markup).not.toContain('data-icon-id="external-link"');
     });
 
     it('renders unsupported markdown URI targets as plain property values', () => {
@@ -1087,7 +1087,7 @@ describe('useFileItemPills', () => {
         expect(markup).not.toContain('tabindex="0"');
     });
 
-    it('renders markdown file URIs as clickable property links', () => {
+    it('renders markdown file URIs as plain property values', () => {
         const markup = renderPillRows({
             file: createTestTFile('Notes/Links.md'),
             isCompactMode: false,
@@ -1110,12 +1110,12 @@ describe('useFileItemPills', () => {
         });
 
         expect(markup).toContain('Open file');
-        expect(markup).toContain('nn-clickable-tag');
-        expect(markup).toContain('nn-file-property-link');
-        expect(markup).toContain('data-icon-id="external-link"');
+        expect(markup).not.toContain('nn-clickable-tag');
+        expect(markup).not.toContain('nn-file-property-link');
+        expect(markup).not.toContain('data-icon-id="external-link"');
     });
 
-    it('renders bare file URIs as clickable property links', () => {
+    it('renders bare file URIs as plain property values', () => {
         const markup = renderPillRows({
             file: createTestTFile('Notes/Links.md'),
             isCompactMode: false,
@@ -1138,9 +1138,9 @@ describe('useFileItemPills', () => {
         });
 
         expect(markup).toContain('file:///Users/example/Documents/reference.pdf');
-        expect(markup).toContain('nn-clickable-tag');
-        expect(markup).toContain('nn-file-property-link');
-        expect(markup).toContain('data-icon-id="external-link"');
+        expect(markup).not.toContain('nn-clickable-tag');
+        expect(markup).not.toContain('nn-file-property-link');
+        expect(markup).not.toContain('data-icon-id="external-link"');
     });
 
     it('renders mailto URIs as clickable property links', () => {
@@ -1216,7 +1216,8 @@ describe('useFileItemPills', () => {
             settings: {
                 ...DEFAULT_SETTINGS,
                 showFileProperties: true,
-                propertyIcons: { reference: 'star' }
+                propertyIcons: { reference: 'star' },
+                enablePropertyExternalLinks: true
             },
             visiblePropertyKeys: new Set<string>(['reference']),
             visibleNavigationPropertyKeys: new Set<string>()

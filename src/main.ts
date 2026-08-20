@@ -89,6 +89,7 @@ import { DEFAULT_SETTINGS } from './settings/defaultSettings';
 import { buildFilePathInFolder, generateUniqueFilename } from './utils/fileCreationUtils';
 import { showNotice } from './utils/noticeUtils';
 import { strings } from './i18n';
+import { HARDENED_SECURITY_POLICY } from './constants/securityPolicy';
 
 interface ObsidianSettingsModal {
     open(): void;
@@ -854,7 +855,7 @@ export default class NotebookNavigatorPlugin extends Plugin implements ISettings
                 this.applyCalendarPlacementView({ force: true, reveal: false });
 
                 // Check for new GitHub releases if enabled, without blocking startup
-                if (this.settings.checkForUpdatesOnStart) {
+                if (HARDENED_SECURITY_POLICY.allowReleaseChecks && this.settings.checkForUpdatesOnStart) {
                     runAsyncAction(() => this.runReleaseUpdateCheck());
                 }
                 recordStartupDiagnostic('layout.readyTasks.complete');
@@ -1266,6 +1267,9 @@ export default class NotebookNavigatorPlugin extends Plugin implements ISettings
     }
 
     public async downloadExternalIconProvider(providerId: ExternalIconProviderId): Promise<void> {
+        if (!HARDENED_SECURITY_POLICY.allowExternalIconDownloads) {
+            throw new Error('External icon downloads are disabled in this hardened build.');
+        }
         await this.getExternalIconController().installProvider(providerId);
     }
 
@@ -1274,6 +1278,9 @@ export default class NotebookNavigatorPlugin extends Plugin implements ISettings
     }
 
     private hasEnabledExternalIconProviders(): boolean {
+        if (!HARDENED_SECURITY_POLICY.allowExternalIconDownloads) {
+            return false;
+        }
         const providers = sanitizeRecord(this.settings.externalIconProviders);
         return Object.values(providers).some(Boolean);
     }
@@ -1289,6 +1296,9 @@ export default class NotebookNavigatorPlugin extends Plugin implements ISettings
     }
 
     private syncExternalIconController(): void {
+        if (!HARDENED_SECURITY_POLICY.allowExternalIconDownloads) {
+            return;
+        }
         runAsyncAction(
             async () => {
                 const controller = this.getExternalIconController();
@@ -1868,7 +1878,7 @@ export default class NotebookNavigatorPlugin extends Plugin implements ISettings
      * Performs the actual release check and updates the pending notice.
      */
     private async evaluateReleaseUpdates(force = false): Promise<void> {
-        if (!this.releaseCheckService || this.isUnloading) {
+        if (!HARDENED_SECURITY_POLICY.allowReleaseChecks || !this.releaseCheckService || this.isUnloading) {
             return;
         }
 

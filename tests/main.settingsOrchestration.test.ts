@@ -137,7 +137,7 @@ function createPluginHarness(): PluginHarness {
     const plugin = new NotebookNavigatorPlugin(
         {} as App,
         {
-            id: 'notebook-navigator',
+            id: 'notebook-navigator-hardened',
             name: 'Notebook Navigator',
             version: '3.2.4',
             minAppVersion: '1.11.0',

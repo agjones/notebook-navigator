@@ -17,7 +17,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildPropertySearchEvidence, resolvePropertyDisplayText } from '../../src/utils/propertyUtils';
+import { buildPropertySearchEvidence, parsePropertyLinkTarget, resolvePropertyDisplayText } from '../../src/utils/propertyUtils';
 
 describe('propertyUtils', () => {
     it('uses wiki link labels as property display text', () => {
@@ -30,6 +30,14 @@ describe('propertyUtils', () => {
 
     it('trims plain property display text', () => {
         expect(resolvePropertyDisplayText('  Waiting for review  ')).toBe('Waiting for review');
+    });
+
+    it('allows only explicitly approved external property-link schemes', () => {
+        expect(parsePropertyLinkTarget('https://example.com')?.kind).toBe('external');
+        expect(parsePropertyLinkTarget('mailto:person@example.com')?.kind).toBe('external');
+        expect(parsePropertyLinkTarget('http://example.com')).toBeNull();
+        expect(parsePropertyLinkTarget('file:///Users/example/secrets.txt')).toBeNull();
+        expect(parsePropertyLinkTarget('zotero://open-pdf/library/items/ABC')).toBeNull();
     });
 
     it('groups property search evidence and caps displayed values', () => {

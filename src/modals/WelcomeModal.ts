@@ -21,6 +21,7 @@ import { WELCOME_VIDEO_URL } from '../constants/urls';
 import { strings } from '../i18n';
 import { addAsyncEventListener } from '../utils/domEventListeners';
 import { getYoutubeThumbnailUrl, getYoutubeVideoId } from '../utils/youtubeUtils';
+import { HARDENED_SECURITY_POLICY } from '../constants/securityPolicy';
 
 export class WelcomeModal extends Modal {
     private domDisposers: (() => void)[] = [];
@@ -45,53 +46,55 @@ export class WelcomeModal extends Modal {
             });
         });
 
-        const thumbnailLink = body.createEl('a', {
-            cls: 'nn-welcome-thumbnail-link',
-            attr: {
-                href: WELCOME_VIDEO_URL,
-                target: '_blank',
-                rel: 'noopener noreferrer'
-            }
-        });
-
-        const thumbnailFrame = thumbnailLink.createDiv({ cls: 'nn-welcome-thumbnail-frame' });
-
-        const videoId = getYoutubeVideoId(WELCOME_VIDEO_URL);
-        if (videoId) {
-            const image = thumbnailFrame.createEl('img', {
-                cls: 'nn-welcome-thumbnail',
+        if (HARDENED_SECURITY_POLICY.allowRemoteReleaseMedia) {
+            const thumbnailLink = body.createEl('a', {
+                cls: 'nn-welcome-thumbnail-link',
                 attr: {
-                    alt: strings.modals.welcome.videoAlt,
-                    width: '1920',
-                    height: '1080'
+                    href: WELCOME_VIDEO_URL,
+                    target: '_blank',
+                    rel: 'noopener noreferrer'
                 }
             });
 
-            const primaryUrl = getYoutubeThumbnailUrl(videoId, 'maxresdefault.jpg');
-            const fallbackUrl = getYoutubeThumbnailUrl(videoId, 'hqdefault.jpg');
+            const thumbnailFrame = thumbnailLink.createDiv({ cls: 'nn-welcome-thumbnail-frame' });
 
-            const playButton = thumbnailFrame.createDiv({
-                cls: ['nn-youtube-play', 'nn-welcome-youtube-play']
-            });
-            playButton.setAttr('aria-hidden', 'true');
+            const videoId = getYoutubeVideoId(WELCOME_VIDEO_URL);
+            if (videoId) {
+                const image = thumbnailFrame.createEl('img', {
+                    cls: 'nn-welcome-thumbnail',
+                    attr: {
+                        alt: strings.modals.welcome.videoAlt,
+                        width: '1920',
+                        height: '1080'
+                    }
+                });
 
-            // Keep the overlay hidden until the thumbnail is painted; otherwise it appears over the empty frame during loading.
-            playButton.hidden = true;
-            image.addEventListener('load', () => {
-                playButton.hidden = false;
-            });
+                const primaryUrl = getYoutubeThumbnailUrl(videoId, 'maxresdefault.jpg');
+                const fallbackUrl = getYoutubeThumbnailUrl(videoId, 'hqdefault.jpg');
 
-            // YouTube does not generate a max-resolution image for every video, so retry once with its standard thumbnail.
-            let usedFallback = false;
-            image.addEventListener('error', () => {
-                if (usedFallback) {
-                    return;
-                }
-                usedFallback = true;
-                image.src = fallbackUrl;
-            });
+                const playButton = thumbnailFrame.createDiv({
+                    cls: ['nn-youtube-play', 'nn-welcome-youtube-play']
+                });
+                playButton.setAttr('aria-hidden', 'true');
 
-            image.src = primaryUrl;
+                // Keep the overlay hidden until the thumbnail is painted; otherwise it appears over the empty frame during loading.
+                playButton.hidden = true;
+                image.addEventListener('load', () => {
+                    playButton.hidden = false;
+                });
+
+                // YouTube does not generate a max-resolution image for every video, so retry once with its standard thumbnail.
+                let usedFallback = false;
+                image.addEventListener('error', () => {
+                    if (usedFallback) {
+                        return;
+                    }
+                    usedFallback = true;
+                    image.src = fallbackUrl;
+                });
+
+                image.src = primaryUrl;
+            }
         }
 
         const buttonContainer = this.contentEl.createDiv({ cls: 'nn-welcome-buttons' });

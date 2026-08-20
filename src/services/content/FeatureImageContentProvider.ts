@@ -32,6 +32,7 @@ import { decodeSvgSourceText, prepareSvgFeatureImageSource } from './thumbnail/s
 import { createOnceLogger, createRenderBudgetLimiter, createRenderLimiter } from './thumbnail/thumbnailRuntimeUtils';
 import { LIMITS } from '../../constants/limits';
 import { getDrawingDirectFeatureImageKey, getDrawingFeatureImageSource } from '../../utils/drawingFeatureImages';
+import { HARDENED_SECURITY_POLICY } from '../../constants/securityPolicy';
 
 type FeatureImageThumbnailDimensions = {
     width: number;
@@ -205,6 +206,10 @@ export class FeatureImageContentProvider extends BaseContentProvider {
             return false;
         }
 
+        if (isPdfFile(file) && !HARDENED_SECURITY_POLICY.allowPdfThumbnails) {
+            return false;
+        }
+
         if (file.extension === 'md') {
             return false;
         }
@@ -268,6 +273,13 @@ export class FeatureImageContentProvider extends BaseContentProvider {
                 return { update: null, processed: true };
             }
 
+            if (isPdfFile(job.file) && !HARDENED_SECURITY_POLICY.allowPdfThumbnails) {
+                return {
+                    update: { path: job.path, featureImage: this.createEmptyBlob(), featureImageKey },
+                    processed: true
+                };
+            }
+
             const thumbnail = await this.createThumbnailBlob(reference, settings);
             if (!thumbnail) {
                 const empty = this.createEmptyBlob();
@@ -322,6 +334,9 @@ export class FeatureImageContentProvider extends BaseContentProvider {
 
         if (reference.kind === 'local') {
             if (isPdfFile(reference.file)) {
+                if (!HARDENED_SECURITY_POLICY.allowPdfThumbnails) {
+                    return null;
+                }
                 return await renderPdfCoverThumbnail(this.app, reference.file, {
                     maxWidth: thumbnailDimensions.width,
                     maxHeight: thumbnailDimensions.height,
@@ -345,7 +360,7 @@ export class FeatureImageContentProvider extends BaseContentProvider {
         }
 
         if (reference.kind === 'external') {
-            if (!settings.downloadExternalFeatureImages) {
+            if (!HARDENED_SECURITY_POLICY.allowExternalFeatureImages || !settings.downloadExternalFeatureImages) {
                 return null;
             }
             const imageData = await this.downloadExternalImage(reference.url);
@@ -361,7 +376,7 @@ export class FeatureImageContentProvider extends BaseContentProvider {
             );
         }
 
-        if (!settings.downloadExternalFeatureImages) {
+        if (!HARDENED_SECURITY_POLICY.allowExternalFeatureImages || !settings.downloadExternalFeatureImages) {
             return null;
         }
         const imageData = await this.downloadYoutubeThumbnail(reference.videoId);

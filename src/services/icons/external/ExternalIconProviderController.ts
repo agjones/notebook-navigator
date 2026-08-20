@@ -39,6 +39,7 @@ import { BUNDLED_ICON_MANIFESTS } from './bundledManifests';
 import { showNotice } from '../../../utils/noticeUtils';
 import { sanitizeRecord } from '../../../utils/recordUtils';
 import type { BaseFontIconProvider } from '../providers/BaseFontIconProvider';
+import { HARDENED_SECURITY_POLICY } from '../../../constants/securityPolicy';
 
 interface InstallOptions {
     persistSetting?: boolean;
@@ -103,7 +104,9 @@ export class ExternalIconProviderController {
 
         this.isInitialized = true;
 
-        await this.applyBundledUpdates();
+        if (HARDENED_SECURITY_POLICY.allowExternalIconDownloads) {
+            await this.applyBundledUpdates();
+        }
     }
 
     /**

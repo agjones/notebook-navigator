@@ -24,6 +24,16 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Change to project root directory
 cd "$SCRIPT_DIR/.."
 
+# Resolve build tools only from the audited lockfile installation. Using npx here
+# can fetch and execute a package from the network when node_modules is incomplete.
+TSC_BIN="$PWD/node_modules/.bin/tsc"
+KNIP_BIN="$PWD/node_modules/.bin/knip"
+
+if [ ! -x "$TSC_BIN" ] || [ ! -x "$KNIP_BIN" ]; then
+    echo "Required local build tools are missing. Run the pinned npm ci workflow first."
+    exit 1
+fi
+
 # Track overall status
 BUILD_WARNINGS=0
 BUILD_ERRORS=0
@@ -88,7 +98,7 @@ fi
 
 # Step 3: Run TypeScript type checking
 echo -e "\nChecking TypeScript types..."
-npx tsc --noEmit --skipLibCheck
+"$TSC_BIN" --noEmit --skipLibCheck
 TSC_STATUS=$?
 if [ $TSC_STATUS -ne 0 ]; then
     echo "❌ TypeScript type checking failed"
@@ -98,10 +108,10 @@ else
     
     # Check for unused imports and variables (warning only)
     echo "Checking for unused imports..."
-    UNUSED_COUNT=$(npx tsc --noEmit --noUnusedLocals --noUnusedParameters 2>&1 | grep -c "is declared but\|is defined but")
+    UNUSED_COUNT=$("$TSC_BIN" --noEmit --noUnusedLocals --noUnusedParameters 2>&1 | grep -c "is declared but\|is defined but")
     if [ $UNUSED_COUNT -gt 0 ]; then
         echo "⚠️  Warning: Found $UNUSED_COUNT unused imports or variables"
-        echo "Run 'npx tsc --noEmit --noUnusedLocals --noUnusedParameters' to see details"
+        echo "Run 'node_modules/.bin/tsc --noEmit --noUnusedLocals --noUnusedParameters' to see details"
         BUILD_WARNINGS=$((BUILD_WARNINGS + 1))
     else
         echo "✅ No unused imports found"
@@ -110,13 +120,13 @@ fi
 
 # Step 4: Check for dead code with Knip (warning only)
 echo -e "\nChecking for dead code..."
-KNIP_OUTPUT=$(npx knip --no-progress 2>/dev/null)
+KNIP_OUTPUT=$("$KNIP_BIN" --no-progress 2>/dev/null)
 DEAD_FILES=$(echo "$KNIP_OUTPUT" | grep -c "^src/.*\.(ts|tsx)" || true)
 DEAD_EXPORTS=$(echo "$KNIP_OUTPUT" | grep -c "function\|class\|interface\|type\|const" || true)
 
 if [ $DEAD_FILES -gt 0 ] || [ $DEAD_EXPORTS -gt 0 ]; then
     echo "⚠️  Warning: Found dead code - $DEAD_FILES unused files, $DEAD_EXPORTS unused exports"
-    echo "Run 'npx knip' to see details"
+    echo "Run 'node_modules/.bin/knip' to see details"
     BUILD_WARNINGS=$((BUILD_WARNINGS + 1))
 else
     echo "✅ No dead code found"
@@ -172,12 +182,6 @@ if [ $BUILD_ERRORS -eq 0 ] && [ $BUILD_WARNINGS -eq 0 ]; then
     # Check if build was successful
     if [ $? -eq 0 ]; then
         echo "✅ Build completed successfully"
-        
-        # Check if local post-build script exists and run it
-        if [ -f "$SCRIPT_DIR/build-local.sh" ]; then
-            echo "Running local post-build script..."
-            "$SCRIPT_DIR/build-local.sh"
-        fi
         
         # Summary
         echo -e "\n=== Build Summary ==="

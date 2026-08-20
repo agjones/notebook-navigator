@@ -29,6 +29,7 @@ import { showNotice } from '../utils/noticeUtils';
 
 const SETTINGS_TRANSFER_FILE_ACCEPT = '.json,application/json,text/json';
 const DEFAULT_SETTINGS_IMPORT_BACKUP_TO_ROOT = true;
+const MAX_SETTINGS_TRANSFER_BYTES = 1024 * 1024;
 
 function createEditorLabel(containerEl: HTMLElement, name: string, desc: string): void {
     const setting = new Setting(containerEl);
@@ -127,6 +128,9 @@ export class SettingsImportModal extends Modal {
             runAsyncAction(async () => {
                 setBusyState(true);
                 try {
+                    if (file.size > MAX_SETTINGS_TRANSFER_BYTES) {
+                        throw new Error('Settings import exceeds the 1 MiB size limit.');
+                    }
                     editorEl.value = await file.text();
                     editorEl.focus();
                 } catch (error) {
@@ -153,6 +157,9 @@ export class SettingsImportModal extends Modal {
 
             let transferData: unknown;
             try {
+                if (new Blob([editorEl.value]).size > MAX_SETTINGS_TRANSFER_BYTES) {
+                    throw new Error('Settings import exceeds the 1 MiB size limit.');
+                }
                 transferData = JSON.parse(editorEl.value);
             } catch (error) {
                 console.error('Failed to parse settings transfer', error);

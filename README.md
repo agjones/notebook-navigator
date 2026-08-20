@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This fork is maintained as a security-hardened personal build with the distinct plugin ID `notebook-navigator-hardened`. Automatic remote downloads, release checks, remote release media, and PDF thumbnail parsing are disabled by a non-configurable policy. Read the [security goals, threat model, and verification guide](docs/security-hardening.md) before building, installing, or updating it.
+
 Read in your language: [English](https://notebooknavigator.com/docs.html) • [العربية](https://notebooknavigator.com/ar/docs.html) • [Deutsch](https://notebooknavigator.com/de/docs.html) • [Español](https://notebooknavigator.com/es/docs.html) • [فارسی](https://notebooknavigator.com/fa/docs.html) • [Français](https://notebooknavigator.com/fr/docs.html) • [Bahasa Indonesia](https://notebooknavigator.com/id/docs.html) • [Italiano](https://notebooknavigator.com/it/docs.html) • [Nederlands](https://notebooknavigator.com/nl/docs.html) • [Polski](https://notebooknavigator.com/pl/docs.html) • [Português](https://notebooknavigator.com/pt/docs.html) • [Português (Brasil)](https://notebooknavigator.com/pt-br/docs.html) • [Русский](https://notebooknavigator.com/ru/docs.html) • [ไทย](https://notebooknavigator.com/th/docs.html) • [Türkçe](https://notebooknavigator.com/tr/docs.html) • [Українська](https://notebooknavigator.com/uk/docs.html) • [Tiếng Việt](https://notebooknavigator.com/vi/docs.html) • [日本語](https://notebooknavigator.com/ja/docs.html) • [한국어](https://notebooknavigator.com/ko/docs.html) • [中文简体](https://notebooknavigator.com/zh-cn/docs.html) • [中文繁體](https://notebooknavigator.com/zh-tw/docs.html)
 
 ![Notebook Navigator Screenshot](https://github.com/johansan/notebook-navigator/blob/main/images/notebook-navigator.png?raw=true)
@@ -21,6 +24,9 @@ Coming from another app? Read the switching guides for [Evernote](https://notebo
 
 ## 1 Installation
 
+The steps below describe the upstream community-plugin release. For this hardened fork, install only a pinned,
+checksum- and attestation-verified fork release by following [Installing a pinned release](docs/security-hardening.md#installing-a-pinned-release), and update it only through that verified release process.
+
 1. **Install Obsidian** - Download and install from [obsidian.md](https://obsidian.md/)
 2. **Enable community plugins** - Go to Settings → Community plugins → Turn on community plugins
 3. **Install Notebook Navigator** - Click "Browse" → Search for "Notebook Navigator" → Install
@@ -40,11 +46,13 @@ The video has subtitles in 21 languages.
 
 ## 3 Security and quality
 
+This fork has a separate [security hardening and threat-model document](docs/security-hardening.md). It records the fork's security goals, enforced runtime restrictions, build and release invariants, residual risks, and the review procedure for accepting upstream changes. These restrictions are intentionally not user-configurable, so imported or stale settings cannot turn the disabled surfaces back on.
+
 Notebook Navigator is checked with [TypeScript](https://www.typescriptlang.org/), [ESLint](https://eslint.org/) with the official [Obsidian ESLint plugin](https://github.com/obsidianmd/eslint-plugin), [Prettier](https://prettier.io/), [Vitest](https://vitest.dev/) and a production build before changes are merged. The build must complete with zero errors and zero warnings.
 
-Security checks run through [CodeQL](https://codeql.github.com/), with scan history in the [CodeQL workflow runs](https://github.com/johansan/notebook-navigator/actions/workflows/codeql.yml), and the [OpenSSF Scorecard](https://securityscorecards.dev/viewer/?uri=github.com/johansan/notebook-navigator). Current status is shown in the badges at the top of this page.
+The fork retains SHA-pinned [CodeQL](https://codeql.github.com/), dependency-review, and OpenSSF Scorecard workflows. Fork-specific results will appear in `agjones/notebook-navigator` after the hardened branch is pushed; the existing badges at the top of this upstream-derived README refer to `johansan/notebook-navigator`.
 
-Notebook Navigator runs locally, but some features make documented HTTP requests for updates, downloads, and remote content. See [section 11 - Network and Diagnostics Disclosure](#11-network-and-diagnostics-disclosure) for the full list.
+The upstream project contains optional HTTP features. This fork disables their automatic request paths in code; user-initiated external links remain possible. See [section 11 - Network and Diagnostics Disclosure](#11-network-and-diagnostics-disclosure) and the [fork security document](docs/security-hardening.md#network-behavior).
 
 <br/>
 
@@ -65,6 +73,8 @@ Notebook Navigator runs locally, but some features make documented HTTP requests
 <br/>
 
 ## 4 Documentation
+
+- [**Security Hardening and Threat Model**](docs/security-hardening.md) - Fork-specific security goals, runtime restrictions, dependency and release controls, verification commands, maintenance rules, and residual risks.
 
 - [**API Reference**](docs/api-reference.md) - Public API documentation. Covers metadata management, navigation control and event subscriptions for JavaScript/TypeScript developers.
 
@@ -120,7 +130,7 @@ Many settings in Notebook Navigator display a sync toggle — a cloud icon that 
 
 ### 6.1 How sync works
 
-Obsidian plugins store their configuration in `data.json`, located at `.obsidian/plugins/notebook-navigator/data.json` inside your vault folder. When you use a sync service — such as [Obsidian Sync](https://obsidian.md/sync), iCloud, GitHub, Dropbox, or Google Drive — this file is synchronized across all your devices along with the rest of your vault. Any setting saved to `data.json` will propagate to every device that syncs the vault.
+Obsidian plugins store their configuration in `data.json`, located at `.obsidian/plugins/notebook-navigator-hardened/data.json` inside your vault folder. When you use a sync service — such as [Obsidian Sync](https://obsidian.md/sync), iCloud, GitHub, Dropbox, or Google Drive — this file is synchronized across all your devices along with the rest of your vault. Any setting saved to `data.json` will propagate to every device that syncs the vault.
 
 <img width="606" height="48" alt="Screenshot 2026-02-18 at 22 58 05" src="https://github.com/user-attachments/assets/01d92458-1967-4008-acae-f722eee0d0a2" />
 
@@ -227,7 +237,7 @@ Note previews show Omnisearch result excerpts instead of the default preview tex
 
 ## 8 Custom hotkeys
 
-Edit `.obsidian/plugins/notebook-navigator/data.json` to customize Notebook Navigator hotkeys. Open the file and locate the `keyboardShortcuts` section. Each entry maps an action to one or more key bindings:
+Edit `.obsidian/plugins/notebook-navigator-hardened/data.json` to customize Notebook Navigator hotkeys. Open the file and locate the `keyboardShortcuts` section. Each entry maps an action to one or more key bindings:
 
 ```json
 "pane:move-up": [ { "key": "ArrowUp", "modifiers": [] }, { "key": "K", "modifiers": [] } ]
@@ -353,69 +363,69 @@ Set custom hotkeys for these commands in Obsidian's Hotkeys settings:
 
 ### 9.1 Command IDs
 
-| Command ID                                          | Command name                                               |
-| --------------------------------------------------- | ---------------------------------------------------------- |
-| `notebook-navigator:open`                           | Notebook Navigator: Open                                   |
-| `notebook-navigator:toggle-left-sidebar`            | Notebook Navigator: Toggle left sidebar                    |
-| `notebook-navigator:open-homepage`                  | Notebook Navigator: Open homepage                          |
-| `notebook-navigator:select-profile`                 | Notebook Navigator: Select vault profile                   |
-| `notebook-navigator:select-profile-1`               | Notebook Navigator: Select vault profile 1                 |
-| `notebook-navigator:select-profile-2`               | Notebook Navigator: Select vault profile 2                 |
-| `notebook-navigator:select-profile-3`               | Notebook Navigator: Select vault profile 3                 |
-| `notebook-navigator:reveal-file`                    | Notebook Navigator: Reveal file                            |
-| `notebook-navigator:open-all-files`                 | Notebook Navigator: Open all files                         |
-| `notebook-navigator:navigate-to-folder`             | Notebook Navigator: Navigate to folder                     |
-| `notebook-navigator:navigate-to-tag`                | Notebook Navigator: Navigate to tag                        |
-| `notebook-navigator:navigate-to-property`           | Notebook Navigator: Navigate to property                   |
-| `notebook-navigator:navigate-back`                  | Notebook Navigator: Navigate back                          |
-| `notebook-navigator:navigate-forward`               | Notebook Navigator: Navigate forward                       |
-| `notebook-navigator:add-shortcut`                   | Notebook Navigator: Add to shortcuts                       |
-| `notebook-navigator:open-shortcut-1`                | Notebook Navigator: Open shortcut 1                        |
-| `notebook-navigator:open-shortcut-2`                | Notebook Navigator: Open shortcut 2                        |
-| `notebook-navigator:open-shortcut-3`                | Notebook Navigator: Open shortcut 3                        |
-| `notebook-navigator:open-shortcut-4`                | Notebook Navigator: Open shortcut 4                        |
-| `notebook-navigator:open-shortcut-5`                | Notebook Navigator: Open shortcut 5                        |
-| `notebook-navigator:open-shortcut-6`                | Notebook Navigator: Open shortcut 6                        |
-| `notebook-navigator:open-shortcut-7`                | Notebook Navigator: Open shortcut 7                        |
-| `notebook-navigator:open-shortcut-8`                | Notebook Navigator: Open shortcut 8                        |
-| `notebook-navigator:open-shortcut-9`                | Notebook Navigator: Open shortcut 9                        |
-| `notebook-navigator:search`                         | Notebook Navigator: Search                                 |
-| `notebook-navigator:search-vault`                   | Notebook Navigator: Search whole vault                     |
-| `notebook-navigator:toggle-dual-pane`               | Notebook Navigator: Toggle dual pane layout                |
-| `notebook-navigator:toggle-dual-pane-orientation`   | Notebook Navigator: Toggle dual pane orientation           |
-| `notebook-navigator:toggle-calendar`                | Notebook Navigator: Toggle calendar                        |
-| `notebook-navigator:open-daily-note`                | Notebook Navigator: Open daily note                        |
-| `notebook-navigator:open-weekly-note`               | Notebook Navigator: Open weekly note                       |
-| `notebook-navigator:open-monthly-note`              | Notebook Navigator: Open monthly note                      |
-| `notebook-navigator:open-quarterly-note`            | Notebook Navigator: Open quarterly note                    |
-| `notebook-navigator:open-yearly-note`               | Notebook Navigator: Open yearly note                       |
-| `notebook-navigator:toggle-descendants`             | Notebook Navigator: Toggle descendants                     |
-| `notebook-navigator:toggle-hidden`                  | Notebook Navigator: Toggle hidden folders, tags, and notes |
-| `notebook-navigator:toggle-tag-sort`                | Notebook Navigator: Toggle tag sort order                  |
-| `notebook-navigator:toggle-tags-by-selection`       | Notebook Navigator: Toggle tags by selection               |
-| `notebook-navigator:toggle-properties-by-selection` | Notebook Navigator: Toggle properties by selection         |
-| `notebook-navigator:toggle-compact-mode`            | Notebook Navigator: Toggle compact mode                    |
-| `notebook-navigator:toggle-pinned-section`          | Notebook Navigator: Toggle pinned section                  |
-| `notebook-navigator:collapse-expand-list-groups`    | Notebook Navigator: Collapse / expand all list groups      |
-| `notebook-navigator:collapse-expand`                | Notebook Navigator: Collapse / expand all navigation items |
-| `notebook-navigator:collapse-expand-selected-item`  | Notebook Navigator: Collapse / expand selected item        |
-| `notebook-navigator:new-note`                       | Notebook Navigator: Create new note                        |
-| `notebook-navigator:new-note-from-template`         | Notebook Navigator: Create new note from template          |
-| `notebook-navigator:move-files`                     | Notebook Navigator: Move files                             |
-| `notebook-navigator:merge-notes`                    | Notebook Navigator: Merge notes                            |
-| `notebook-navigator:select-next-file`               | Notebook Navigator: Select next file                       |
-| `notebook-navigator:select-previous-file`           | Notebook Navigator: Select previous file                   |
-| `notebook-navigator:convert-to-folder-note`         | Notebook Navigator: Convert to folder note                 |
-| `notebook-navigator:set-as-folder-note`             | Notebook Navigator: Set as folder note                     |
-| `notebook-navigator:detach-folder-note`             | Notebook Navigator: Detach folder note                     |
-| `notebook-navigator:pin-all-folder-notes`           | Notebook Navigator: Pin all folder notes                   |
-| `notebook-navigator:delete-files`                   | Notebook Navigator: Delete files                           |
-| `notebook-navigator:add-tag`                        | Notebook Navigator: Add tag to selected files              |
-| `notebook-navigator:set-property`                   | Notebook Navigator: Set property on selected files         |
-| `notebook-navigator:remove-tag`                     | Notebook Navigator: Remove tag from selected files         |
-| `notebook-navigator:remove-all-tags`                | Notebook Navigator: Remove all tags from selected files    |
-| `notebook-navigator:rebuild-cache`                  | Notebook Navigator: Rebuild cache                          |
-| `notebook-navigator:restore-default-settings`       | Notebook Navigator: Restore default settings               |
+| Command ID                                                   | Command name                                               |
+| ------------------------------------------------------------ | ---------------------------------------------------------- |
+| `notebook-navigator-hardened:open`                           | Notebook Navigator: Open                                   |
+| `notebook-navigator-hardened:toggle-left-sidebar`            | Notebook Navigator: Toggle left sidebar                    |
+| `notebook-navigator-hardened:open-homepage`                  | Notebook Navigator: Open homepage                          |
+| `notebook-navigator-hardened:select-profile`                 | Notebook Navigator: Select vault profile                   |
+| `notebook-navigator-hardened:select-profile-1`               | Notebook Navigator: Select vault profile 1                 |
+| `notebook-navigator-hardened:select-profile-2`               | Notebook Navigator: Select vault profile 2                 |
+| `notebook-navigator-hardened:select-profile-3`               | Notebook Navigator: Select vault profile 3                 |
+| `notebook-navigator-hardened:reveal-file`                    | Notebook Navigator: Reveal file                            |
+| `notebook-navigator-hardened:open-all-files`                 | Notebook Navigator: Open all files                         |
+| `notebook-navigator-hardened:navigate-to-folder`             | Notebook Navigator: Navigate to folder                     |
+| `notebook-navigator-hardened:navigate-to-tag`                | Notebook Navigator: Navigate to tag                        |
+| `notebook-navigator-hardened:navigate-to-property`           | Notebook Navigator: Navigate to property                   |
+| `notebook-navigator-hardened:navigate-back`                  | Notebook Navigator: Navigate back                          |
+| `notebook-navigator-hardened:navigate-forward`               | Notebook Navigator: Navigate forward                       |
+| `notebook-navigator-hardened:add-shortcut`                   | Notebook Navigator: Add to shortcuts                       |
+| `notebook-navigator-hardened:open-shortcut-1`                | Notebook Navigator: Open shortcut 1                        |
+| `notebook-navigator-hardened:open-shortcut-2`                | Notebook Navigator: Open shortcut 2                        |
+| `notebook-navigator-hardened:open-shortcut-3`                | Notebook Navigator: Open shortcut 3                        |
+| `notebook-navigator-hardened:open-shortcut-4`                | Notebook Navigator: Open shortcut 4                        |
+| `notebook-navigator-hardened:open-shortcut-5`                | Notebook Navigator: Open shortcut 5                        |
+| `notebook-navigator-hardened:open-shortcut-6`                | Notebook Navigator: Open shortcut 6                        |
+| `notebook-navigator-hardened:open-shortcut-7`                | Notebook Navigator: Open shortcut 7                        |
+| `notebook-navigator-hardened:open-shortcut-8`                | Notebook Navigator: Open shortcut 8                        |
+| `notebook-navigator-hardened:open-shortcut-9`                | Notebook Navigator: Open shortcut 9                        |
+| `notebook-navigator-hardened:search`                         | Notebook Navigator: Search                                 |
+| `notebook-navigator-hardened:search-vault`                   | Notebook Navigator: Search whole vault                     |
+| `notebook-navigator-hardened:toggle-dual-pane`               | Notebook Navigator: Toggle dual pane layout                |
+| `notebook-navigator-hardened:toggle-dual-pane-orientation`   | Notebook Navigator: Toggle dual pane orientation           |
+| `notebook-navigator-hardened:toggle-calendar`                | Notebook Navigator: Toggle calendar                        |
+| `notebook-navigator-hardened:open-daily-note`                | Notebook Navigator: Open daily note                        |
+| `notebook-navigator-hardened:open-weekly-note`               | Notebook Navigator: Open weekly note                       |
+| `notebook-navigator-hardened:open-monthly-note`              | Notebook Navigator: Open monthly note                      |
+| `notebook-navigator-hardened:open-quarterly-note`            | Notebook Navigator: Open quarterly note                    |
+| `notebook-navigator-hardened:open-yearly-note`               | Notebook Navigator: Open yearly note                       |
+| `notebook-navigator-hardened:toggle-descendants`             | Notebook Navigator: Toggle descendants                     |
+| `notebook-navigator-hardened:toggle-hidden`                  | Notebook Navigator: Toggle hidden folders, tags, and notes |
+| `notebook-navigator-hardened:toggle-tag-sort`                | Notebook Navigator: Toggle tag sort order                  |
+| `notebook-navigator-hardened:toggle-tags-by-selection`       | Notebook Navigator: Toggle tags by selection               |
+| `notebook-navigator-hardened:toggle-properties-by-selection` | Notebook Navigator: Toggle properties by selection         |
+| `notebook-navigator-hardened:toggle-compact-mode`            | Notebook Navigator: Toggle compact mode                    |
+| `notebook-navigator-hardened:toggle-pinned-section`          | Notebook Navigator: Toggle pinned section                  |
+| `notebook-navigator-hardened:collapse-expand-list-groups`    | Notebook Navigator: Collapse / expand all list groups      |
+| `notebook-navigator-hardened:collapse-expand`                | Notebook Navigator: Collapse / expand all navigation items |
+| `notebook-navigator-hardened:collapse-expand-selected-item`  | Notebook Navigator: Collapse / expand selected item        |
+| `notebook-navigator-hardened:new-note`                       | Notebook Navigator: Create new note                        |
+| `notebook-navigator-hardened:new-note-from-template`         | Notebook Navigator: Create new note from template          |
+| `notebook-navigator-hardened:move-files`                     | Notebook Navigator: Move files                             |
+| `notebook-navigator-hardened:merge-notes`                    | Notebook Navigator: Merge notes                            |
+| `notebook-navigator-hardened:select-next-file`               | Notebook Navigator: Select next file                       |
+| `notebook-navigator-hardened:select-previous-file`           | Notebook Navigator: Select previous file                   |
+| `notebook-navigator-hardened:convert-to-folder-note`         | Notebook Navigator: Convert to folder note                 |
+| `notebook-navigator-hardened:set-as-folder-note`             | Notebook Navigator: Set as folder note                     |
+| `notebook-navigator-hardened:detach-folder-note`             | Notebook Navigator: Detach folder note                     |
+| `notebook-navigator-hardened:pin-all-folder-notes`           | Notebook Navigator: Pin all folder notes                   |
+| `notebook-navigator-hardened:delete-files`                   | Notebook Navigator: Delete files                           |
+| `notebook-navigator-hardened:add-tag`                        | Notebook Navigator: Add tag to selected files              |
+| `notebook-navigator-hardened:set-property`                   | Notebook Navigator: Set property on selected files         |
+| `notebook-navigator-hardened:remove-tag`                     | Notebook Navigator: Remove tag from selected files         |
+| `notebook-navigator-hardened:remove-all-tags`                | Notebook Navigator: Remove all tags from selected files    |
+| `notebook-navigator-hardened:rebuild-cache`                  | Notebook Navigator: Rebuild cache                          |
+| `notebook-navigator-hardened:restore-default-settings`       | Notebook Navigator: Restore default settings               |
 
 <br/>
 
@@ -485,7 +495,7 @@ Set custom hotkeys for these commands in Obsidian's Hotkeys settings:
 
 ## 11 Network and Diagnostics Disclosure
 
-Notebook Navigator runs locally, but some features make HTTP requests from Obsidian. Startup debug logging can also write a local diagnostic file in your vault.
+The upstream codebase contains the optional HTTP features described below. In this hardened fork, sections 11.1 through 11.3 are blocked by the frozen policy in `src/constants/securityPolicy.ts`; imported settings cannot re-enable them. Explicitly clicking a support, documentation, tutorial, or allowed property link can still open an external page. Startup debug logging can still write a local diagnostic file in your vault.
 
 ### 11.1 Release update checks (Optional)
 

@@ -231,7 +231,7 @@ export const DEFAULT_SETTINGS: NotebookNavigatorSettings = {
     externalIconProviders: sanitizeRecord<boolean>(undefined),
 
     // Advanced tab
-    checkForUpdatesOnStart: true,
+    checkForUpdatesOnStart: false,
 
     // Navigation pane tab - Appearance
     pinNavigationBanner: true,
@@ -372,7 +372,7 @@ export const DEFAULT_SETTINGS: NotebookNavigatorSettings = {
     featureImageSize: '64',
     featureImagePixelSize: '256',
     forceSquareFeatureImage: true,
-    downloadExternalFeatureImages: true,
+    downloadExternalFeatureImages: false,
     showFileTags: true,
     colorFileTags: true,
     prioritizeColoredFileTags: true,
@@ -384,7 +384,7 @@ export const DEFAULT_SETTINGS: NotebookNavigatorSettings = {
     showFilePropertiesInCompactMode: false,
     showPropertiesOnSeparateRows: false,
     enablePropertyInternalLinks: true,
-    enablePropertyExternalLinks: true,
+    enablePropertyExternalLinks: false,
     textCountDisplay: 'none',
     textCountPlacement: 'title',
     characterCountSpaces: 'include',

@@ -33,7 +33,7 @@ interface MockSettingTabDelegate {
 
 function createPlugin(): NotebookNavigatorPlugin {
     const app = new App();
-    return new Plugin(app, { id: 'notebook-navigator' }) as NotebookNavigatorPlugin;
+    return new Plugin(app, { id: 'notebook-navigator-hardened' }) as NotebookNavigatorPlugin;
 }
 
 function createContainer(isConnected: boolean): HTMLElement {

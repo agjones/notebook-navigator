@@ -24,6 +24,7 @@ import { addAsyncEventListener } from '../utils/domEventListeners';
 import { focusElementPreventScroll } from '../utils/domUtils';
 import { DateUtils } from '../utils/dateUtils';
 import { getYoutubeThumbnailUrl, getYoutubeVideoId } from '../utils/youtubeUtils';
+import { HARDENED_SECURITY_POLICY } from '../constants/securityPolicy';
 
 const SUPPORTED_RELEASE_NOTE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'obsidian:']);
 
@@ -277,18 +278,18 @@ export class WhatsNewModal extends Modal {
             }
             versionContainer.createEl('h3', { text: headerText });
 
-            if (note.banner) {
+            if (HARDENED_SECURITY_POLICY.allowRemoteReleaseMedia && note.banner) {
                 const bannerUrl = getReleaseBannerUrl(note.banner);
                 this.renderReleaseBanner(versionContainer, bannerUrl, note.bannerClickable === true);
             }
 
-            const videoUrl = getReleaseVideoUrl(note.videoUrl, note.version);
+            const videoUrl = HARDENED_SECURITY_POLICY.allowRemoteReleaseMedia ? getReleaseVideoUrl(note.videoUrl, note.version) : null;
             if (videoUrl) {
                 const openUrl = note.videoClickable === true ? getReleaseVideoOpenUrl(note.videoUrl, note.version) : null;
                 this.renderReleaseVideo(versionContainer, videoUrl, openUrl);
             }
 
-            if (note.youtubeUrl) {
+            if (HARDENED_SECURITY_POLICY.allowRemoteReleaseMedia && note.youtubeUrl) {
                 this.renderYoutubeLink(versionContainer, note.youtubeUrl, note.youtubePlayButton);
             }
 

@@ -37,7 +37,7 @@ const MAX_SVG_ELEMENT_COUNT = 2_000;
 
 const VAULT_ICON_EXTENSION = 'svg';
 const FORBIDDEN_SVG_SELECTORS =
-    'script,style,foreignObject,iframe,object,embed,link,image,a,animate,animateMotion,animateTransform,animateColor,set,mpath,filter,mask,pattern,linearGradient,radialGradient,stop';
+    'script,style,foreignObject,iframe,object,embed,link,image,a,use,animate,animateMotion,animateTransform,animateColor,set,mpath,filter,mask,pattern,linearGradient,radialGradient,stop';
 const STRIPPED_STYLE_PROPERTIES = new Set(['fill', 'stroke', 'color']);
 const ALLOWED_SVG_STYLE_PROPERTIES = new Set([
     'clip-rule',
@@ -214,11 +214,6 @@ function hasNonNoneValue(value: string | null | undefined): boolean {
     return trimmed.length > 0 && trimmed !== 'none';
 }
 
-function isSafeInternalSvgHref(value: string): boolean {
-    const trimmed = value.trim();
-    return /^#[A-Za-z_][\w:.-]*$/.test(trimmed);
-}
-
 function parseInlineStyle(style: string): Map<string, string> {
     const map = new Map<string, string>();
     const parts = style.split(';');
@@ -347,7 +342,6 @@ function removeUnsafeSvgAttributes(svg: SVGSVGElement): void {
     const elements = [svg, ...Array.from(svg.querySelectorAll('*'))];
     elements.forEach(element => {
         const attributes = Array.from(element.attributes);
-        const tagName = element.tagName.toLowerCase();
         attributes.forEach(attribute => {
             const name = attribute.name.toLowerCase();
             if (name.startsWith('on')) {
@@ -366,14 +360,6 @@ function removeUnsafeSvgAttributes(svg: SVGSVGElement): void {
             }
 
             if (name === 'href' || name === 'xlink:href') {
-                const rawHref = attribute.value;
-                if (tagName === 'use' && isSafeInternalSvgHref(rawHref)) {
-                    if (name === 'xlink:href') {
-                        element.setAttribute('href', rawHref.trim());
-                        element.removeAttribute(attribute.name);
-                    }
-                    return;
-                }
                 element.removeAttribute(attribute.name);
                 return;
             }
@@ -414,7 +400,7 @@ function applyCurrentColor(svg: SVGSVGElement, options: { hasStroke: boolean }):
 }
 
 function hasRenderableSvgContent(svg: SVGSVGElement): boolean {
-    return svg.querySelector('path,circle,rect,line,polyline,polygon,ellipse,use,text') !== null;
+    return svg.querySelector('path,circle,rect,line,polyline,polygon,ellipse,text') !== null;
 }
 
 interface SvgParseResult {

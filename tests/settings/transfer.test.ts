@@ -119,6 +119,26 @@ describe('applyModifiedSettingsTransfer', () => {
         );
     });
 
+    it('rejects deeply nested settings before recursive merging', () => {
+        let nested: Record<string, unknown> = { folderSortOrder: 'alpha-desc' };
+        for (let depth = 0; depth < 40; depth++) {
+            nested = { nested };
+        }
+
+        expect(() => applyModifiedSettingsTransfer(structuredClone(DEFAULT_SETTINGS), nested)).toThrow(
+            'Settings import is nested too deeply.'
+        );
+    });
+
+    it('rejects circular settings before cloning', () => {
+        const transfer: Record<string, unknown> = { folderSortOrder: 'alpha-desc' };
+        transfer.circular = transfer;
+
+        expect(() => applyModifiedSettingsTransfer(structuredClone(DEFAULT_SETTINGS), transfer)).toThrow(
+            'Settings import contains a circular reference.'
+        );
+    });
+
     it('accepts an empty bare legacy diff', () => {
         const currentSettings = structuredClone(DEFAULT_SETTINGS);
         currentSettings.searchProvider = 'omnisearch';

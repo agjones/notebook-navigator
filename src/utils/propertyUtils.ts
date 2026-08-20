@@ -62,9 +62,7 @@ const MAX_PROPERTY_SEARCH_EVIDENCE_VALUES = 3;
 const MAX_PROPERTY_SEARCH_EVIDENCE_GROUPS = 3;
 
 const EXTERNAL_URI_SCHEME_PATTERN = /^([a-z][a-z0-9+.-]{1,31}):/i;
-// Keep file: out of the blocked set so property pills follow desktop Obsidian's
-// external-link flow, which shows its own warning before opening the target.
-const BLOCKED_EXTERNAL_URI_PROTOCOLS = new Set(['data:', 'javascript:', 'vbscript:']);
+const ALLOWED_EXTERNAL_URI_PROTOCOLS = new Set(['https:', 'mailto:', 'sms:', 'tel:']);
 const ALLOWED_NON_SLASH_EXTERNAL_URI_PROTOCOLS = new Set(['mailto:', 'sms:', 'tel:']);
 
 export function hasWordCountTargetPropertyConsumer(settings: NotebookNavigatorSettings): boolean {
@@ -224,7 +222,7 @@ function parseSupportedExternalUriTarget(value: string): string | null {
     try {
         const url = new URL(trimmed);
         const protocol = url.protocol.toLowerCase();
-        if (BLOCKED_EXTERNAL_URI_PROTOCOLS.has(protocol)) {
+        if (!ALLOWED_EXTERNAL_URI_PROTOCOLS.has(protocol)) {
             return null;
         }
 

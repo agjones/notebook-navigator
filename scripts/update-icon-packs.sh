@@ -56,9 +56,10 @@ if [[ ! -f "${SCRIPT_PATH}" ]]; then
     exit 1
 fi
 
-if ! command -v npx >/dev/null 2>&1; then
-    echo "npx is required to run icon pack updates" >&2
+TSX_BIN="${REPO_ROOT}/node_modules/.bin/tsx"
+if [[ ! -x "${TSX_BIN}" ]]; then
+    echo "The pinned local tsx executable is required. Run npm ci first." >&2
     exit 1
 fi
 
-npx tsx "${SCRIPT_PATH}" "$@"
+"${TSX_BIN}" "${SCRIPT_PATH}" "$@"

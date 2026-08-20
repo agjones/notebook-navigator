@@ -39,6 +39,47 @@ const NON_TRANSFERABLE_SETTING_KEYS = new Set([
 ]);
 
 const SETTINGS_TRANSFER_PLUGIN_ID = 'notebook-navigator';
+const MAX_SETTINGS_TRANSFER_DEPTH = 32;
+const MAX_SETTINGS_TRANSFER_NODES = 20_000;
+
+function validateSettingsTransferStructure(value: unknown): void {
+    const stack: { value: unknown; depth: number }[] = [{ value, depth: 0 }];
+    const visited = new WeakSet<object>();
+    let nodeCount = 0;
+
+    while (stack.length > 0) {
+        const current = stack.pop();
+        if (!current) {
+            continue;
+        }
+
+        const candidate = current.value;
+        if (candidate === null || ['string', 'number', 'boolean'].includes(typeof candidate)) {
+            continue;
+        }
+
+        if (typeof candidate !== 'object' || (!Array.isArray(candidate) && !isRecord(candidate))) {
+            throw new Error('Settings import contains an unsupported value.');
+        }
+
+        if (current.depth > MAX_SETTINGS_TRANSFER_DEPTH) {
+            throw new Error('Settings import is nested too deeply.');
+        }
+
+        if (visited.has(candidate)) {
+            throw new Error('Settings import contains a circular reference.');
+        }
+        visited.add(candidate);
+
+        const children = Array.isArray(candidate) ? candidate : Object.values(candidate);
+        nodeCount += children.length;
+        if (nodeCount > MAX_SETTINGS_TRANSFER_NODES) {
+            throw new Error('Settings import contains too many values.');
+        }
+
+        children.forEach(child => stack.push({ value: child, depth: current.depth + 1 }));
+    }
+}
 
 function padTimestampPart(value: number): string {
     return value.toString().padStart(2, '0');
@@ -314,6 +355,7 @@ function unwrapSettingsTransfer(transferData: Record<string, unknown>): Record<s
 }
 
 export function applyModifiedSettingsTransfer(currentSettings: NotebookNavigatorSettings, transferData: unknown): Record<string, unknown> {
+    validateSettingsTransferStructure(transferData);
     if (!isRecord(transferData)) {
         throw new Error('Settings import must be a JSON object.');
     }

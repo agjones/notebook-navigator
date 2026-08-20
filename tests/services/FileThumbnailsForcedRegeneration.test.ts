@@ -68,7 +68,7 @@ function createFileData(overrides: Partial<FileData>): FileData {
     };
 }
 
-describe('FeatureImageContentProvider PDF forced regeneration', () => {
+describe('FeatureImageContentProvider PDF hardening', () => {
     it('tracks featureImagePixelSize as a regeneration setting', () => {
         const app = new App();
         const provider = new TestFileThumbnailsProvider(app);
@@ -100,7 +100,7 @@ describe('FeatureImageContentProvider PDF forced regeneration', () => {
         });
     });
 
-    it('re-renders PDFs when fileThumbnailsMtime is stale even if featureImageKey matches', async () => {
+    it('does not parse PDFs when fileThumbnailsMtime is stale', async () => {
         const app = new App();
         const provider = new TestFileThumbnailsProvider(app);
 
@@ -120,12 +120,12 @@ describe('FeatureImageContentProvider PDF forced regeneration', () => {
         const settings: NotebookNavigatorSettings = { ...DEFAULT_SETTINGS, showFeatureImage: true };
         const result = await provider.runProcessFile(file, fileData, settings);
 
-        expect(provider.getThumbnailCalls()).toBe(1);
+        expect(provider.getThumbnailCalls()).toBe(0);
         expect(result.processed).toBe(true);
         expect(result.update?.path).toBe(file.path);
         expect(result.update?.featureImageKey).toBe(expectedKey);
         expect(result.update?.featureImage instanceof Blob).toBe(true);
-        expect((result.update?.featureImage as Blob | undefined)?.size).toBeGreaterThan(0);
+        expect((result.update?.featureImage as Blob | undefined)?.size).toBe(0);
     });
 
     it('skips PDFs when fileThumbnailsMtime and featureImageKey are up-to-date', async () => {
