@@ -134,14 +134,29 @@ release, then verify them before copying them into the Obsidian plugin directory
 
 ```sh
 shasum -a 256 -c SHA256SUMS
-gh attestation verify main.js --repo agjones/notebook-navigator
-gh attestation verify manifest.json --repo agjones/notebook-navigator
-gh attestation verify styles.css --repo agjones/notebook-navigator
+
+version='3.3.4'
+source_digest='83181086f9f841e98a28c9887ca0ef002b42d45b'
+for artifact in main.js manifest.json styles.css SHA256SUMS; do
+    gh attestation verify "$artifact" \
+        --repo agjones/notebook-navigator \
+        --signer-workflow agjones/notebook-navigator/.github/workflows/release.yml \
+        --source-ref "refs/tags/$version" \
+        --source-digest "$source_digest" \
+        --signer-digest "$source_digest" \
+        --deny-self-hosted-runners \
+        --format json --jq 'length'
+done
 ```
 
-Record the installed semantic version and the verified hashes. Do not use Obsidian's Community Plugins "Update all"
-flow for this fork; install a newly verified fork release deliberately because every update is a new arbitrary-code
-trust decision.
+Replace `version` and `source_digest` with the exact reviewed tag and peeled tag commit for future releases. Requiring
+only the repository identity is insufficient when more than one run has attested byte-identical artifacts; the source
+commit, tag ref, signer workflow, signer commit, and GitHub-hosted runner must also match. Each command above must exit
+successfully and print exactly `1`.
+
+Record the installed semantic version, source commit, and verified hashes. Do not use Obsidian's Community Plugins
+"Update all" flow for this fork; install a newly verified fork release deliberately because every update is a new
+arbitrary-code trust decision.
 
 The verified files belong in `.obsidian/plugins/notebook-navigator-hardened/`. Do not rename that directory or edit the
 release `manifest.json`; the directory name must continue to match the manifest plugin ID.
