@@ -23,7 +23,11 @@ import { DEFAULT_SETTINGS } from '../../src/settings/defaultSettings';
 import type { ContentProviderType } from '../../src/interfaces/IContentProvider';
 import type { NotebookNavigatorSettings } from '../../src/settings/types';
 import type { FileData } from '../../src/storage/IndexedDBStorage';
-import { filterFilesRequiringFileThumbnails, filterFilesRequiringMetadataSources } from '../../src/context/storageQueueFilters';
+import {
+    filterFilesRequiringFileThumbnails,
+    filterFilesRequiringMetadataSources,
+    shouldQueueFileThumbnailProvider
+} from '../../src/context/storageQueueFilters';
 import { getDrawingDirectFeatureImageKey } from '../../src/utils/drawingFeatureImages';
 
 class FakeDB {
@@ -504,7 +508,7 @@ describe('Storage queue filters', () => {
         expect(conservativeMissingResult).toEqual([file]);
     });
 
-    it('includes PDF files when fileThumbnailsMtime is reset even if featureImageKey matches', () => {
+    it('excludes PDF files when the hardened policy disables PDF thumbnails', () => {
         const file = new TFile();
         file.path = 'docs/file.pdf';
         file.extension = 'pdf';
@@ -524,7 +528,8 @@ describe('Storage queue filters', () => {
 
         const result = filterFilesRequiringFileThumbnails([file], settings);
 
-        expect(result).toEqual([file]);
+        expect(shouldQueueFileThumbnailProvider(file)).toBe(false);
+        expect(result).toEqual([]);
     });
 
     it('excludes PDF files when fileThumbnailsMtime and featureImageKey are up-to-date', () => {
@@ -548,6 +553,30 @@ describe('Storage queue filters', () => {
         const result = filterFilesRequiringFileThumbnails([file], settings);
 
         expect(result).toEqual([]);
+    });
+
+    it('continues to queue SVG thumbnails when generated thumbnails are allowed', () => {
+        const file = new TFile();
+        file.path = 'images/diagram.svg';
+        file.extension = 'svg';
+        file.stat.mtime = 1234;
+
+        db.setFile(
+            file.path,
+            createFileData({
+                mtime: file.stat.mtime,
+                fileThumbnailsMtime: 0,
+                featureImageKey: null,
+                featureImageStatus: 'unprocessed'
+            })
+        );
+
+        settings = { ...settings, showFeatureImage: true };
+
+        const result = filterFilesRequiringFileThumbnails([file], settings);
+
+        expect(shouldQueueFileThumbnailProvider(file)).toBe(true);
+        expect(result).toEqual([file]);
     });
 
     it('includes raw Tldraw files when the direct drawing marker is missing', () => {
