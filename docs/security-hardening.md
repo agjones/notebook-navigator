@@ -49,6 +49,8 @@ attestation service, the npm registry, Node.js distribution infrastructure, Obsi
 
 The corresponding user-facing defaults are also off. The policy is the security boundary: changing imported settings
 alone cannot enable these paths. Any change to this file or to a call site guarded by it requires security review.
+Provider eligibility, background queues, and progress accounting must use the same policy-aware predicates. Work that
+the policy disables must be excluded from pending counts rather than left permanently unprocessed.
 
 Local raster images and bounded, sanitized local SVG feature images remain supported. User-initiated links to support,
 documentation, or tutorial pages remain possible. Property links are restricted to `https:`, `mailto:`, `sms:`, and
