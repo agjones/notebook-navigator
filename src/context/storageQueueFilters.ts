@@ -18,11 +18,12 @@
 
 import { App, TFile } from 'obsidian';
 import type { CachedMetadata } from 'obsidian';
+import { HARDENED_SECURITY_POLICY } from '../constants/securityPolicy';
 import type { ContentProviderType } from '../interfaces/IContentProvider';
 import type { NotebookNavigatorSettings } from '../settings/types';
 import { getDBInstance } from '../storage/fileOperations';
 import { createFrontmatterPropertyExclusionMatcher } from '../utils/fileFilters';
-import { isGeneratedThumbnailFile } from '../utils/fileTypeUtils';
+import { isGeneratedThumbnailFile, isPdfFile } from '../utils/fileTypeUtils';
 import { getActiveHiddenFileProperties } from '../utils/vaultProfiles';
 import { getLocalFeatureImageKey } from '../services/content/FeatureImageContentProvider';
 import { createCaseInsensitiveKeyMatcher } from '../utils/recordUtils';
@@ -186,6 +187,12 @@ export function filterFilesRequiringMetadataSources(
 }
 
 function getFileThumbnailFeatureImageKey(file: TFile): string | null {
+    // Keep queueing and progress accounting aligned with the non-configurable security policy.
+    // Policy-disabled PDFs must not remain permanently "unprocessed" work that no provider will run.
+    if (isPdfFile(file) && !HARDENED_SECURITY_POLICY.allowPdfThumbnails) {
+        return null;
+    }
+
     if (isGeneratedThumbnailFile(file)) {
         return getLocalFeatureImageKey(file);
     }
